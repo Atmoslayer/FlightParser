@@ -114,7 +114,7 @@ def find_flight(source, destination, data_base_dictionary):
     return founded_flights
 
 
-def find_max_min_variants(founded_flights, passangers, data_base_dictionary):
+def find_max_min_variants(founded_flights, passengers, data_base_dictionary):
 
     maxmin_dictionary = {}
     if founded_flights != []:
@@ -125,7 +125,7 @@ def find_max_min_variants(founded_flights, passangers, data_base_dictionary):
             max_price = 0
             min_price = 0
 
-            for passenger in passangers:
+            for passenger in passengers:
 
                 for flights_quantity in range(len(data_base_dictionary)):
                     for founded_flights_quantity in range(len(founded_flights)):
@@ -155,14 +155,22 @@ def find_max_min_variants(founded_flights, passangers, data_base_dictionary):
 
     return maxmin_dictionary
 
-def find_optimal(maxmin_dictionary, founded_flights):
+def find_optimal(maxmin_dictionary, passengers, founded_flights):
 
 
     ratio_list = []
     ratio_dictionary = {}
+    flight_price = 0
 
     for flight in founded_flights:
-        ratio = (float(flight['price_adult']) / float(maxmin_dictionary['min_price']) + float(flight['flight_time']) / float(maxmin_dictionary['min_time']))
+
+        for passenger in passengers:
+
+            passenger_category = 'price_{passenger}'
+            flight_price += float(flight[passenger_category.format(passenger=passenger)])
+
+
+        ratio = flight_price / float(maxmin_dictionary['min_price']) + float(flight['flight_time']) / float(maxmin_dictionary['min_time'])
         ratio_list.append(ratio)
 
     for ratio_number in range(len(ratio_list)):
@@ -183,16 +191,16 @@ if __name__ == '__main__':
     source = input('Sourse: ')
     destination = input('Destination: ')
     founded_flights = find_flight(source, destination, data_base_dictionary)
-    passangers = []
+    passengers = []
 
     try:
         passengers_quantity = int(input('Passengers quantity: '))
-        for passanger in range(passengers_quantity):
-            passangers.append(input('Passanger: '))
+        for passenger in range(passengers_quantity):
+            passengers.append(input('Passanger: '))
 
-        maxmin_dictionary = find_max_min_variants(founded_flights, passangers, data_base_dictionary)
+        maxmin_dictionary = find_max_min_variants(founded_flights, passengers, data_base_dictionary)
 
-        rating = (find_optimal(maxmin_dictionary, founded_flights))
+        rating = (find_optimal(maxmin_dictionary, passengers, founded_flights))
 
         for flight in rating:
             print(rating[flight])
