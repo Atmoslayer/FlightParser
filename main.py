@@ -13,7 +13,7 @@ def hello_user():
     while not (got_param):
 
         try:
-            user_choice = int(input('Which data base to use? (1 - RS_ViaOW.xml, 2 - RS_Via-3.xml, 3 - both)\n'))
+            user_choice = int(input('Which data base to use? (1 - RS_ViaOW.xml, 2 - RS_Via-3.xml, compare)\n'))
         except ValueError:
             print('Please enter integer: 1, 2 or 3')
 
@@ -39,9 +39,9 @@ def remove_repetitions(data_base_dictionary):
 
     for flight_index in data_base_dictionary:
 
-            if data_base_dictionary[flight_index] not in purified_data_base_dictionary.values():
-                purified_data_base_dictionary[flight_number] = data_base_dictionary[flight_index]
-                flight_number += 1
+        if data_base_dictionary[flight_index] not in purified_data_base_dictionary.values():
+            purified_data_base_dictionary[flight_number] = data_base_dictionary[flight_index]
+            flight_number += 1
 
     return purified_data_base_dictionary
 
@@ -59,6 +59,39 @@ def convert_flight_time(all_airports, all_times):
         all_airport_timezone.append(time_time_zoned)
     return all_airport_timezone
 
+
+def compare_data_base(first_data_base, second_data_base):
+
+    both_data_base_dictionary = {}
+
+    print('It can take some time...')
+
+    first_data_base_dictionary = xml_to_dictionary(first_data_base)
+    second_data_base_dictionary = xml_to_dictionary(second_data_base)
+
+    for first_flight_index in first_data_base_dictionary:
+
+        first_carrier = first_data_base_dictionary[first_flight_index]['carrier']
+        first_flight_number = first_data_base_dictionary[first_flight_index]['flight_number']
+        first_source = first_data_base_dictionary[first_flight_index]['source_airport']
+        first_destination = first_data_base_dictionary[first_flight_index]['destination_airport']
+
+        for second_flight_index in second_data_base_dictionary:
+
+            second_carrier = second_data_base_dictionary[second_flight_index]['carrier']
+            second_flight_number = second_data_base_dictionary[second_flight_index]['flight_number']
+            second_source = second_data_base_dictionary[second_flight_index]['source_airport']
+            second_destination = second_data_base_dictionary[second_flight_index]['destination_airport']
+
+            if first_carrier == second_carrier and first_flight_number == second_flight_number and first_source == second_source and first_destination == second_destination:
+                both_data_base_dictionary[first_flight_index] = {'first_db': first_data_base_dictionary[first_flight_index],
+                                                                 'second_db': second_data_base_dictionary[second_flight_index]}
+
+    purified_data_base_dictionary = remove_repetitions(both_data_base_dictionary)
+
+    return purified_data_base_dictionary
+
+
 def xml_to_dictionary(file_name):
 
     data_base_dictionary = {}
@@ -67,6 +100,7 @@ def xml_to_dictionary(file_name):
 
         with open(file_name) as data_base:
             data = data_base.read()
+
     except FileNotFoundError:
 
         return None
@@ -121,7 +155,7 @@ def xml_to_dictionary(file_name):
                                                     'source_airport': all_sources[flights_quantity].text,
                                                     'destination_airport': all_destinations[flights_quantity].text,
                                                     'departure_time': all_departure_times[flights_quantity].text,
-                                                    'arrival_time': all_departure_times[flights_quantity].text,
+                                                    'arrival_time': all_arrival_times[flights_quantity].text,
                                                     'flight_time': all_times[flights_quantity],
                                                     'flight_class': all_classes[flights_quantity].text,
                                                      'number_of_stops': all_numbers_of_stops[flights_quantity].text,
@@ -129,7 +163,6 @@ def xml_to_dictionary(file_name):
                                                     'price_adult': all_prices_adult[flights_quantity],
                                                     'price_child': all_prices_child[flights_quantity],
                                                       'price_infant': all_prices_infant[flights_quantity]}
-
 
     purified_data_base_dictionary = remove_repetitions(data_base_dictionary)
 
@@ -207,10 +240,11 @@ def find_variants(founded_flights, passengers):
     sorted_ratio_list = sorted(ratio_list, key=lambda ratio: ratio[0])
 
     for rated_flight_index in range(len(sorted_ratio_list)):
+
         variants_dictionary[f'top_{rated_flight_index + 1}'] = sorted_ratio_list[rated_flight_index][1]
 
-
     for params_quantity in range(len(all_prices)):
+
         if all_prices[params_quantity] == max_price:
             variants_dictionary['expensive_flight'] = founded_flights[params_quantity]
         if all_prices[params_quantity] == min_price:
@@ -221,7 +255,7 @@ def find_variants(founded_flights, passengers):
             variants_dictionary['short_flight'] = founded_flights[params_quantity]
 
     if not category_found:
-        print(f'No tickets for {passenger} data, price for adult used')
+        print(f'If no price data for child/infant price for adult used')
 
     return variants_dictionary
 
@@ -229,29 +263,31 @@ def find_variants(founded_flights, passengers):
 if __name__ == '__main__':
 
     data_base_name = hello_user()
-    data_base_dictionary = xml_to_dictionary(data_base_name)
-    if data_base_dictionary is not None:
-        source = input('Sourse: ')
-        destination = input('Destination: ')
-        founded_flights = find_flight(source, destination, data_base_dictionary)
-        passengers = []
-
-        try:
-            passengers_quantity = int(input('Passengers quantity: '))
-            for passenger in range(passengers_quantity):
-                new_passenger = input('Passanger: ')
-                passengers.append(new_passenger)
-
-            variants_dictionary = find_variants(founded_flights, passengers)
-
-            for info in variants_dictionary:
-                print(variants_dictionary[info])
-
-        except ValueError:
-            print('Please, enter integer')
+    if data_base_name == 'We use both':
+        data_base_dictionary = compare_data_base('RS_ViaOW.xml', 'RS_Via-3.xml')
+        print(data_base_dictionary)
 
     else:
-        print('TODO')
+        data_base_dictionary = xml_to_dictionary(data_base_name)
+        if data_base_dictionary is not None:
+            source = input('Sourse: ')
+            destination = input('Destination: ')
+            founded_flights = find_flight(source, destination, data_base_dictionary)
+            passengers = []
+
+            try:
+                passengers_quantity = int(input('Passengers quantity: '))
+                for passenger in range(passengers_quantity):
+                    new_passenger = input('Passanger: ')
+                    passengers.append(new_passenger)
+
+                variants_dictionary = find_variants(founded_flights, passengers)
+
+                for info in variants_dictionary:
+                    print(variants_dictionary[info])
+
+            except ValueError:
+                print('Please, enter integer')
 
 
 
