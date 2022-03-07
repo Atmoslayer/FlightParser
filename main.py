@@ -1,3 +1,4 @@
+import argparse
 from bs4 import BeautifulSoup
 import json
 import datetime
@@ -7,29 +8,21 @@ from timezones import timezones_data
 
 def hello_user():
 
-    choices = [1, 2, 3]
-    got_param = False
+    parser = argparse.ArgumentParser()
 
-    while not (got_param):
+    parser.add_argument('-c', '--choose_action', help='Choose data base or compare action', type=str, choices={'first_db', 'second_db', 'compare'})
+    parser.add_argument('source', help='Source airport', type=str)
+    parser.add_argument('destination', help='Destination airport', type=str)
+    parser.add_argument('passengers_types', help='Passengers list: adult, child, infant', nargs='+', choices={'adult', 'child', 'infant'}, type=str)
 
-        try:
-            user_choice = int(input('Which data base to use? (1 - RS_ViaOW.xml, 2 - RS_Via-3.xml, compare)\n'))
-        except ValueError:
-            print('Please enter integer: 1, 2 or 3')
+    arguments = parser.parse_args()
 
-        if user_choice not in choices:
-            print('Please enter 1, 2 or 3')
-        elif user_choice == 1:
-            file_name = 'RS_ViaOW.xml'
-            got_param = True
-        elif user_choice == 2:
-            file_name = 'RS_Via-3.xml'
-            got_param = True
-        elif user_choice == 3:
-            file_name = 'We use both'
-            got_param = True
+    action = arguments.choose_action
+    source = arguments.source
+    destination = arguments.destination
+    passengers = arguments.passengers_types
 
-    return file_name
+    return action, source, destination, passengers
 
 
 def remove_repetitions(data_base_dictionary):
@@ -92,9 +85,14 @@ def compare_data_base(first_data_base, second_data_base):
     return purified_data_base_dictionary
 
 
-def xml_to_dictionary(file_name):
+def xml_to_dictionary(action):
 
     data_base_dictionary = {}
+
+    if action == 'first_db':
+        file_name = 'RS_ViaOW.xml'
+    else:
+        file_name = 'RS_Via-3.xml'
 
     try:
 
@@ -262,32 +260,21 @@ def find_variants(founded_flights, passengers):
 
 if __name__ == '__main__':
 
-    data_base_name = hello_user()
-    if data_base_name == 'We use both':
+    action, source, destination, passengers = hello_user()
+    if action == 'compare':
         data_base_dictionary = compare_data_base('RS_ViaOW.xml', 'RS_Via-3.xml')
         print(data_base_dictionary)
 
     else:
-        data_base_dictionary = xml_to_dictionary(data_base_name)
+        data_base_dictionary = xml_to_dictionary(action)
         if data_base_dictionary is not None:
-            source = input('Sourse: ')
-            destination = input('Destination: ')
+
             founded_flights = find_flight(source, destination, data_base_dictionary)
-            passengers = []
 
-            try:
-                passengers_quantity = int(input('Passengers quantity: '))
-                for passenger in range(passengers_quantity):
-                    new_passenger = input('Passanger: ')
-                    passengers.append(new_passenger)
+            variants_dictionary = find_variants(founded_flights, passengers)
 
-                variants_dictionary = find_variants(founded_flights, passengers)
-
-                for info in variants_dictionary:
-                    print(variants_dictionary[info])
-
-            except ValueError:
-                print('Please, enter integer')
+            for info in variants_dictionary:
+                print(variants_dictionary[info])
 
 
 
