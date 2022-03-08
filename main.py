@@ -1,8 +1,7 @@
-import json
-
 from bs4 import BeautifulSoup
 
-from helpers import convert_flight_time, hello_user, remove_repetitions
+from helpers import (convert_flight_time, hello_user, load_return,
+                     remove_repetitions)
 
 
 def compare_data_base(first_data_base, second_data_base):
@@ -37,14 +36,9 @@ def compare_data_base(first_data_base, second_data_base):
     return purified_data_base_dictionary
 
 
-def xml_to_dictionary(action):
+def xml_to_dictionary(file_name):
 
     data_base_dictionary = {}
-
-    if action == 'first_db':
-        file_name = 'RS_ViaOW.xml'
-    else:
-        file_name = 'RS_Via-3.xml'
 
     try:
 
@@ -205,28 +199,29 @@ def find_variants(founded_flights, passengers):
             variants_dictionary['short_flight'] = founded_flights[params_quantity]
 
     if not category_found:
-        print(f'If no price data for child/infant price for adult used')
+        print(f'No price data for child/infant, price for adult used')
 
     return variants_dictionary
 
 
 if __name__ == '__main__':
 
-    action, source, destination, passengers = hello_user()
-    if action == 'compare':
+    file_name, source, destination, passengers = hello_user()
+    if file_name == 'both':
         data_base_dictionary = compare_data_base('RS_ViaOW.xml', 'RS_Via-3.xml')
-        print(data_base_dictionary)
+        load_return(data_base_dictionary)
 
     else:
-        data_base_dictionary = xml_to_dictionary(action)
+        data_base_dictionary = xml_to_dictionary(file_name)
+
         if data_base_dictionary is not None:
 
             founded_flights = find_flight(source, destination, data_base_dictionary)
 
             variants_dictionary = find_variants(founded_flights, passengers)
 
-            for info in variants_dictionary:
-                print(variants_dictionary[info])
+            load_return(variants_dictionary)
+
 
 
 

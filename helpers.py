@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import json
 
 import pytz
 
@@ -22,7 +23,14 @@ def hello_user():
     destination = arguments.destination
     passengers = arguments.passengers_types
 
-    return action, source, destination, passengers
+    if action == 'first_db':
+        file_name = 'RS_ViaOW.xml'
+    if action == 'second_db':
+        file_name = 'RS_ViaOW.xml'
+    if action == 'compare':
+        file_name = 'both'
+
+    return file_name, source, destination, passengers
 
 
 def remove_repetitions(data_base_dictionary):
@@ -51,3 +59,9 @@ def convert_flight_time(all_airports, all_times):
         time_time_zoned = time_timezone.localize(time_obj)
         all_airport_timezone.append(time_time_zoned)
     return all_airport_timezone
+
+def load_return(data_dictionary):
+
+    with open('return.json', 'w') as save_file:
+        json.dump(data_dictionary, save_file, indent=3)
+        print('Data loaded to return.json')
