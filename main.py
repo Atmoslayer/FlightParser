@@ -1,8 +1,10 @@
 import argparse
-from bs4 import BeautifulSoup
-import json
 import datetime
+import json
+
 import pytz
+from bs4 import BeautifulSoup
+
 from timezones import timezones_data
 
 
